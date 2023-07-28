@@ -70,6 +70,8 @@ services:
       DIRECT_DATABASE_ENDPOINT: "http://triplestore:8890/sparql"
       BATCH_SIZE: 250
       INGEST_GRAPH: "http://mu.semte.ch/application"
+      DCR_SECRET_KEY: "GFyx2HuJfCAiAsJQL6AHjOG8sbB97dqZ"
+      DCR_SYNC_LOGIN_ENDPOINT: "http://10.234.0.1:8888/sync/books/login"
     volumes:
       - ./data/files/consumer-files/books:/consumer-files/
     restart: always

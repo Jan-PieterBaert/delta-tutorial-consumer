@@ -1,4 +1,10 @@
-version: '3.4'
+version: '3.7'
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
   identifier:
@@ -14,21 +20,43 @@ services:
       - frontend_books:frontend_books
     volumes:
       - ./config/dispatcher:/config
-  database:
+  triplestore:
     image: redpencil/virtuoso:1.0.0
+    ports:
+      - "8879:8890"
     environment:
       SPARQL_UPDATE: "true"
       DEFAULT_GRAPH: "http://mu.semte.ch/application"
     volumes:
       - ./data/db:/data
       - ./config/virtuoso/virtuoso.ini:/data/virtuoso.ini
+  database:
+    image: semtech/mu-authorization:0.6.0-beta.8
+    environment:
+      MU_SPARQL_ENDPOINT: "http://triplestore:8890/sparql"
+    volumes:
+      - ./config/authorization:/config
+    labels:
+      - "logging=true"
+    restart: always
+    logging: *default-logging
 
   books:
     image: madnificent/books-service:2.0.0
     links:
-      - database:database
+      - triplestore:database
 
   frontend_books:
     image: janpieterbaert/delta-tutorial-books-frontend:consumer
     links:
       - books:backend
+
+  # step 3:
+  books-consumer:
+    image: lblod/delta-consumer:0.0.19
+    volumes:
+      - ./data/files/consumer-files/books:/consumer-files/
+    restart: always
+    labels:
+      - "logging=true"
+    logging: *default-logging
